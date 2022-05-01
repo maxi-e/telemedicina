@@ -1,0 +1,2 @@
+- Proyecto de telemedicina para la catedra de administracion de proyecto
+- Para el desarrollo de este proyecto se tuvo en cuenta como guia de referencia la Sexta Edicion del PMBOX
