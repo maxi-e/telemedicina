@@ -1,0 +1,39 @@
+version: "3"
+services:
+  app:
+    image: recetas-img
+    container_name: recetas-container
+    build: ./
+    restart: always
+    ports:
+      - "81:80"
+    volumes:
+      - .:/var/www/html
+  myadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: phpmyadmin
+    #image: phpmyadmin/phpmyadmin
+    restart: always
+    depends_on:
+      - mysql
+    ports: 
+      - "82:80"
+    links: 
+      - mysql:db
+  mysql:
+    container_name: mysql
+    image: mysql:5.7
+    restart: always
+    ports:
+      - 3306:3306
+    volumes:
+      - mysql:/var/lib/mysql
+    environment:
+      MYSQL_HOST: 127.0.0.1
+      MYSQL_ROOT_PASSWORD: 123456
+volumes:
+    mysql:
+      driver: "local"
+networks:
+  app:
+    driver: bridge
