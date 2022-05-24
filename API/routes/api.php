@@ -18,8 +18,8 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-
-//Rutas Usuarios
+Route::group(['middleware' => ['cors']], function () {
+   //Rutas Usuarios
 Route::get('/usuarios','App\Http\Controllers\UsuarioController@index'); //mostrar todos los registros
 Route::post('/usuarios','App\Http\Controllers\UsuarioController@store'); //crear usuario
 Route::post('/usuarios/login','App\Http\Controllers\UsuarioController@login'); //login usuario
@@ -46,6 +46,9 @@ Route::get('/medicamentos/{descripcion}','App\Http\Controllers\MedicamentoContro
 
 Route::get('/recetas/{id_paciente}','App\Http\Controllers\RecetaController@getRecetas'); //listar recetas
 Route::post('/recetas','App\Http\Controllers\RecetaController@store'); //agregar una receta
+
+});
+
 
 
 
