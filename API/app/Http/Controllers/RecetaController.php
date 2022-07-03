@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\DetalleReceta;
 use App\Models\Receta;
+use Hamcrest\Core\HasToString;
 use Illuminate\Http\Request;
 
 class RecetaController extends Controller
@@ -36,31 +37,42 @@ class RecetaController extends Controller
      */
     public function store(Request $request)
     {
+        $hash = $request->hash;
+        $hashencriptado = $request->hashencriptado;
+        
         $receta = new Receta();
         $detallereceta = new Detallereceta();
 
         //guardado de la receta
-
-        $receta->fecha =  $request->fecha;
-        $receta->id_paciente =  $request->id_paciente;
-        $receta->id_medico =  $request->id_medico;
+        $receta->fecha =  $request->receta['fecha'];
+        $receta->id_paciente =  $request->receta['id_paciente'];
+        $receta->id_medico =  $request->receta['id_medico'];
         $receta->entregado =  0;
-        $receta->save();
-        $id = Receta::latest('id')->first()->id;
+        
+        $resul = $this->validarHash($receta, $hashencriptado, $hash);
 
-        //guardado del detalle de la receta 
+        if($resul == 1){
+            $receta->hash = $hash;
+            $receta->hashencriptado = $hashencriptado;
+            $receta->save();
+            $id = Receta::latest('id')->first()->id;
+            
+            //guardado del detalle de la receta 
+            $detallerecetas = $request->receta['detallereceta'];
 
-        $detallerecetas = $request->detallerecetas;
-
-        foreach($detallerecetas as $d){
+            foreach($detallerecetas as $d){
             $detallereceta->indicacion = $d['indicacion'];
             $detallereceta->cantidad = $d['cantidad'];
             $detallereceta->id_receta = $id;
             $detallereceta->id_medicamento = $d['id_medicamento'];
             $detallereceta->save();
-        }
+            }
 
-         return 'ok';
+        return ['ok', $detallereceta];
+        }
+        else{
+            return 'No se pudo verificar que la firma electronica loe corresponda al medico';
+        }
 
     }
 
@@ -84,6 +96,20 @@ class RecetaController extends Controller
         return $recetas;
     }
 
+    public function validarHash(Receta $receta, String $hashencriptado, String $hash)  //valida el hash de la firma 
+    {
+        //cargo la ruta que tiene que tener el archivo con la clave publica del medico
+        $pathToPublicKey =  public_path("{$receta['id_medico']}.pem");
+        // obtengo el contenido de la clave
+        $publicKeyString = file_get_contents($pathToPublicKey);
+        if (!$publicKey = openssl_pkey_get_public($publicKeyString)) die('Fallo clave publica');
+        //verifico la firma mediante el metodo verify
+        $result = openssl_verify($hash, base64_decode($hashencriptado), $publicKey, OPENSSL_ALGO_SHA256);
+
+        return($result);
+    }
+
+   
     /**
      * Show the form for editing the specified resource.
      *

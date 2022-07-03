@@ -23,6 +23,24 @@ class MedicoController extends Controller
         return $medico;
     }
 
+    public function generarClaves($id_usuario){
+    
+        $medico = Medico::query()->where('id_usuario','=', $id_usuario)->first();
+
+        $rsaKey = openssl_pkey_new(array( 
+            'private_key_bits' => 1024,
+            'private_key_type' => OPENSSL_KEYTYPE_RSA,
+        ));
+        $privKey = openssl_pkey_get_private($rsaKey); 
+        openssl_pkey_export($privKey, $details);
+        $pubKey = openssl_pkey_get_details($rsaKey);
+        $pubKey = $pubKey["key"];
+
+        openssl_pkey_export_to_file($privKey,"{$medico->nombre}-key");
+        file_put_contents("{$medico->id}.pem", $pubKey);
+        return $details;
+    }
+
     /**
      * Show the form for creating a new resource.
      *
