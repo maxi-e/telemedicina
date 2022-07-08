@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\DetalleReceta;
+use App\Models\Medicamento;
+use App\Models\Paciente;
 use App\Models\Receta;
 use Hamcrest\Core\HasToString;
 use Illuminate\Http\Request;
@@ -45,6 +47,7 @@ class RecetaController extends Controller
 
         //guardado de la receta
         $receta->fecha =  $request->receta['fecha'];
+        $receta->diagnostico =  $request->receta['diagnostico']; 
         $receta->id_paciente =  $request->receta['id_paciente'];
         $receta->id_medico =  $request->receta['id_medico'];
         $receta->entregado =  0;
@@ -90,10 +93,14 @@ class RecetaController extends Controller
     public function getRecetas($id_paciente)
     {
         $recetas = Receta::query()->where('id_paciente','=', $id_paciente)->get();
+        $paciente = Paciente::query()->where('id','=', $id_paciente)->first();
         foreach($recetas as $r){
             $r->detallerecetas = DetalleReceta::query()->where('id_receta','=',$r->id)->get();
+            foreach($r->detallerecetas as $dr){
+                $dr->descripcion =  Medicamento::query()->where('id','=',$dr->id_medicamento)->first()->descripcion;
+            }
         }
-        return $recetas;
+        return ["nombre"=>$paciente->nombre,"recetas"=>$recetas];
     }
 
     public function validarHash(Receta $receta, String $hashencriptado, String $hash)  //valida el hash de la firma 
